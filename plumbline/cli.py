@@ -70,7 +70,7 @@ def _collect(path: Path, root: Path, project, locked):
 def _check(args) -> int:
     root = Path(args.root).resolve()
     if not root.is_dir():
-        print(f"sahih: {root} is not a directory", file=sys.stderr)
+        print(f"plumbline: {root} is not a directory", file=sys.stderr)
         return EXIT_USAGE
 
     project = scan(root)
@@ -78,7 +78,7 @@ def _check(args) -> int:
     targets = args.documents or DEFAULT_DOCUMENTS
     documents = _documents(targets, root)
     if not documents:
-        print("sahih: no documents to check", file=sys.stderr)
+        print("plumbline: no documents to check", file=sys.stderr)
         return EXIT_USAGE
 
     payload = []
@@ -100,7 +100,7 @@ def _check(args) -> int:
         print(json.dumps({"documents": payload}, indent=2, ensure_ascii=False))
     elif stale_documents:
         print("\nrecorded claims are older than the document in: "
-              + ", ".join(stale_documents) + "\nrun sahih extract to refresh them",
+              + ", ".join(stale_documents) + "\nrun plumbline extract to refresh them",
               file=sys.stderr)
 
     return EXIT_FAILED_CLAIMS if failures else EXIT_OK
@@ -110,7 +110,7 @@ def _extract(args) -> int:
     root = Path(args.root).resolve()
     documents = _documents(args.documents or DEFAULT_DOCUMENTS, root)
     if not documents:
-        print("sahih: no documents to read", file=sys.stderr)
+        print("plumbline: no documents to read", file=sys.stderr)
         return EXIT_USAGE
 
     client = model.Ollama(model=args.model, endpoint=args.endpoint)
@@ -125,7 +125,7 @@ def _extract(args) -> int:
         try:
             claims = model.read_prose(document, client)
         except model.ModelUnavailable as error:
-            print(f"sahih: {error}", file=sys.stderr)
+            print(f"plumbline: {error}", file=sys.stderr)
             return EXIT_USAGE
         entries[relative] = lockfile.Entry(digest=lockfile.digest(text), claims=claims)
         total += len(claims)
@@ -138,7 +138,7 @@ def _extract(args) -> int:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="sahih",
+        prog="plumbline",
         description="Check that documentation still describes the repository.")
     parser.add_argument("--version", action="version", version=_version())
     subcommands = parser.add_subparsers(dest="command")
@@ -168,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def _version() -> str:
     from . import __version__
-    return f"sahih {__version__}"
+    return f"plumbline {__version__}"
 
 
 def main(argv: list[str] | None = None) -> int:

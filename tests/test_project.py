@@ -1,4 +1,4 @@
-from sahih import project
+from plumbline import project
 
 
 def test_make_targets_ignore_recipes_variables_and_patterns(tmp_path):

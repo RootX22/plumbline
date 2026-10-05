@@ -1,5 +1,5 @@
-from sahih import lockfile
-from sahih.claims import Claim, Kind, Source
+from plumbline import lockfile
+from plumbline.claims import Claim, Kind, Source
 
 
 def entry(subject="DEMO_ROOT"):
@@ -10,7 +10,7 @@ def entry(subject="DEMO_ROOT"):
 
 
 def test_claims_survive_a_round_trip(tmp_path):
-    path = tmp_path / ".sahih/claims.json"
+    path = tmp_path / ".plumbline/claims.json"
     lockfile.save(path, {"README.md": entry()})
     loaded = lockfile.load(path)
     assert loaded["README.md"].claims[0].subject == "DEMO_ROOT"

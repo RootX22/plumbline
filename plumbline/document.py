@@ -19,7 +19,7 @@ HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 #: commands, show deliberately broken examples, and describe systems that are
 #: not this one; without an escape hatch the only way to silence a false alarm
 #: is to stop running the tool.
-IGNORE = re.compile(r"<!--\s*sahih\s*:\s*ignore\s*-->")
+IGNORE = re.compile(r"<!--\s*plumbline\s*:\s*ignore\s*-->")
 
 
 @dataclass(frozen=True)

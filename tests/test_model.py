@@ -7,9 +7,9 @@ thing standing between an invented sentence and a report that looks official.
 
 import json
 
-from sahih import document
-from sahih.claims import Kind, Source
-from sahih.model import ModelUnavailable, Ollama, admit, numbered_prose, read_prose
+from plumbline import document
+from plumbline.claims import Kind, Source
+from plumbline.model import ModelUnavailable, Ollama, admit, numbered_prose, read_prose
 
 TEXT = (
     "# demo\n"

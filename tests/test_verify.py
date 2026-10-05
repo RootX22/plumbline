@@ -1,6 +1,6 @@
-from sahih import project
-from sahih.claims import Claim, Kind, Status
-from sahih.verify import verify
+from plumbline import project
+from plumbline.claims import Claim, Kind, Status
+from plumbline.verify import verify
 
 
 def check(claim, root):

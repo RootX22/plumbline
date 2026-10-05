@@ -18,7 +18,7 @@ than they look:
   cannot change the answer for a claim already found, because that answer comes
   from the filesystem.
 
-The second point is why `sahih extract` writes a lockfile and `sahih check`
+The second point is why `plumbline extract` writes a lockfile and `plumbline check`
 reads it. Continuous integration verifies a fixed set of claims and never calls
 a model; refreshing the set is a deliberate act with a diff to review.
 """

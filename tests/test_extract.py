@@ -1,6 +1,6 @@
-from sahih import document, project
-from sahih.claims import Kind
-from sahih.extract import from_document
+from plumbline import document, project
+from plumbline.claims import Kind
+from plumbline.extract import from_document
 
 
 def claims_for(text, root):
@@ -99,18 +99,18 @@ def test_a_comment_line_is_not_a_command(repo):
 
 
 def test_an_ignore_comment_silences_the_block_below_it(repo):
-    text = "<!-- sahih:ignore -->\n```bash\n./nowhere.sh\n```\n"
+    text = "<!-- plumbline:ignore -->\n```bash\n./nowhere.sh\n```\n"
     assert claims_for(text, repo) == []
 
 
 def test_an_ignore_comment_does_not_silence_the_rest_of_the_document(repo):
-    text = ("<!-- sahih:ignore -->\n```bash\n./nowhere.sh\n```\n"
+    text = ("<!-- plumbline:ignore -->\n```bash\n./nowhere.sh\n```\n"
             "\nand then:\n\n```bash\nmake test\n```\n")
     assert subjects(claims_for(text, repo), Kind.MAKE) == {"test"}
 
 
 def test_an_ignore_comment_silences_inline_claims_on_its_own_line(repo):
-    assert claims_for("see `wp-content/debug.log` <!-- sahih:ignore -->\n", repo) == []
+    assert claims_for("see `wp-content/debug.log` <!-- plumbline:ignore -->\n", repo) == []
 
 
 def test_a_dotted_directory_keeps_its_dot(repo):

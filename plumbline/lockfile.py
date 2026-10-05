@@ -18,7 +18,7 @@ from pathlib import Path
 from .claims import Claim, Kind, Source
 
 VERSION = 1
-DEFAULT_PATH = Path(".sahih/claims.json")
+DEFAULT_PATH = Path(".plumbline/claims.json")
 
 
 def digest(text: str) -> str:

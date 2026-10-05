@@ -1,4 +1,4 @@
-# sahih
+# plumbline
 
 Documentation is a set of claims about a repository. Nothing checks them.
 
@@ -8,13 +8,13 @@ of a project that nobody runs. So they rot, quietly, and the first person to
 find out is whoever is following them at two in the morning, or on their first
 day, or while deciding whether the project is worth their time.
 
-`sahih` reads a document, pulls out every claim it can check, and checks it.
+`plumbline` reads a document, pulls out every claim it can check, and checks it.
 
 ## The bug that started it
 
 A deployment toolkit of mine had this in its README:
 
-<!-- sahih:ignore -->
+<!-- plumbline:ignore -->
 ```bash
 ## `scripts/deploy.sh`
 
@@ -31,13 +31,13 @@ looking: linters check whether Markdown is well formed, not whether it is true.
 ## Install
 
 ```bash
-pip install git+https://github.com/RootX22/sahih.git
+pip install git+https://github.com/RootX22/plumbline.git
 ```
 
 ## Use
 
 ```bash
-sahih check
+plumbline check
 ```
 
 With no arguments it reads `README.md`, `CONTRIBUTING.md`, `RUNBOOK.md` and
@@ -59,7 +59,7 @@ A document that quotes another project's commands, or shows a deliberately
 broken one, says so:
 
 ```markdown
-<!-- sahih:ignore -->
+<!-- plumbline:ignore -->
 ```
 
 on the line above a fenced block, or at the end of a prose line, and that block
@@ -91,8 +91,8 @@ better at than a pattern.
 What the model is not allowed to do is decide whether a claim is true.
 
 ```bash
-sahih extract            # a local model reads the prose, writes .sahih/claims.json
-sahih check              # verifies that file against the repository, calling nothing
+plumbline extract            # a local model reads the prose, writes .plumbline/claims.json
+plumbline check              # verifies that file against the repository, calling nothing
 ```
 
 Two properties fall out of that split, and both are the point rather than a
@@ -143,8 +143,8 @@ undecided rather than broken.
 ## In CI
 
 ```yaml
-- run: pip install git+https://github.com/RootX22/sahih.git
-- run: sahih check
+- run: pip install git+https://github.com/RootX22/plumbline.git
+- run: plumbline check
 ```
 
 Exit codes: `0` everything checked holds, `1` at least one claim failed, `2` bad
@@ -176,9 +176,12 @@ standing to check anyone else's.
 
 ## Name
 
-صحيح — *sahih*, sound or verified: in the study of transmitted reports, the
-grade given to one whose chain has been checked rather than assumed. The same
-question this asks of a README.
+A plumb line is the oldest instrument for testing whether something is *true*.
+A weight on a string, hung against a wall: the wall either agrees with gravity
+or it does not, and no amount of confidence on the builder's part changes the
+reading. Documentation is the same kind of problem. It is either true of the
+repository or it is not, and the only way to find out is to hold it up against
+something that cannot be argued with.
 
 ## Development
 
@@ -188,8 +191,8 @@ pytest -q
 ruff check .
 ```
 
-The checker has no runtime dependencies. `sahih/extract.py` turns a document
-into claims, `sahih/verify.py` decides them, and `sahih/model.py` holds the
+The checker has no runtime dependencies. `plumbline/extract.py` turns a document
+into claims, `plumbline/verify.py` decides them, and `plumbline/model.py` holds the
 gate between what a model says and what is allowed to count.
 
 ## Licence

@@ -19,7 +19,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: pip install -e ".[dev]"
       - run: ruff check .
-      - run: pytest -q --cov=sahih --cov-report=term-missing
+      - run: pytest -q --cov=plumbline --cov-report=term-missing
 
   dogfood:
     # The checker is run against its own README. A tool that cannot keep its
@@ -31,4 +31,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -e .
-      - run: sahih check
+      - run: plumbline check

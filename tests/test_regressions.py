@@ -5,10 +5,10 @@ checker produced on documentation that was correct, which is the failure that
 gets a linter deleted rather than fixed.
 """
 
-from sahih import document, project
-from sahih.claims import Kind, Status
-from sahih.extract import from_document
-from sahih.verify import verify
+from plumbline import document, project
+from plumbline.claims import Kind, Status
+from plumbline.extract import from_document
+from plumbline.verify import verify
 
 
 def run(text, root):

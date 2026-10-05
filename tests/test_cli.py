@@ -1,8 +1,8 @@
 import json
 
-from sahih import lockfile, model
-from sahih.claims import Claim, Kind, Source
-from sahih.cli import EXIT_FAILED_CLAIMS, EXIT_OK, EXIT_USAGE, main
+from plumbline import lockfile, model
+from plumbline.claims import Claim, Kind, Source
+from plumbline.cli import EXIT_FAILED_CLAIMS, EXIT_OK, EXIT_USAGE, main
 
 
 def write(repo, text):
@@ -51,7 +51,7 @@ def test_recorded_claims_are_verified_without_a_model(repo, capsys):
         digest=lockfile.digest((repo / "README.md").read_text()),
         claims=[Claim(kind=Kind.ENV, subject="DEMO_OLD", line=1,
                       quote="The worker reads DEMO_OLD at boot.", source=Source.MODEL)])
-    lockfile.save(repo / ".sahih/claims.json", {"README.md": entry})
+    lockfile.save(repo / ".plumbline/claims.json", {"README.md": entry})
 
     assert main(["check", "--root", str(repo), "README.md"]) == EXIT_FAILED_CLAIMS
     out = capsys.readouterr().out
@@ -64,7 +64,7 @@ def test_claims_recorded_against_an_older_document_are_not_trusted(repo, capsys)
     entry = lockfile.Entry(digest="0000000000000000",
                            claims=[Claim(kind=Kind.ENV, subject="DEMO_OLD", line=1,
                                          quote="x", source=Source.MODEL)])
-    lockfile.save(repo / ".sahih/claims.json", {"README.md": entry})
+    lockfile.save(repo / ".plumbline/claims.json", {"README.md": entry})
 
     assert main(["check", "--root", str(repo), "README.md"]) == EXIT_OK
     assert "older than the document" in capsys.readouterr().err
@@ -87,10 +87,10 @@ def test_extract_records_what_the_model_found(repo, capsys, monkeypatch):
             return ('[{"kind": "env", "subject": "DEMO_OLD", "line": 1, '
                     '"quote": "The worker reads DEMO_OLD at boot."}]')
 
-    monkeypatch.setattr("sahih.cli.model.Ollama", Stub)
+    monkeypatch.setattr("plumbline.cli.model.Ollama", Stub)
     assert main(["extract", "--root", str(repo), "README.md"]) == EXIT_OK
 
-    recorded = lockfile.load(repo / ".sahih/claims.json")
+    recorded = lockfile.load(repo / ".plumbline/claims.json")
     assert [c.subject for c in recorded["README.md"].claims] == ["DEMO_OLD"]
     assert "1 claims recorded" in capsys.readouterr().out
 
@@ -105,9 +105,9 @@ def test_extract_reports_an_unreachable_model_instead_of_writing_nothing(repo, m
         def generate(self, prompt):
             raise model.ModelUnavailable("localhost did not answer")
 
-    monkeypatch.setattr("sahih.cli.model.Ollama", Dead)
+    monkeypatch.setattr("plumbline.cli.model.Ollama", Dead)
     assert main(["extract", "--root", str(repo), "README.md"]) == EXIT_USAGE
-    assert not (repo / ".sahih/claims.json").exists()
+    assert not (repo / ".plumbline/claims.json").exists()
 
 
 def test_extract_without_documents_is_a_usage_error(tmp_path):
@@ -116,4 +116,4 @@ def test_extract_without_documents_is_a_usage_error(tmp_path):
 
 def test_no_subcommand_prints_help(capsys):
     assert main([]) == EXIT_USAGE
-    assert "sahih" in capsys.readouterr().out
+    assert "plumbline" in capsys.readouterr().out
