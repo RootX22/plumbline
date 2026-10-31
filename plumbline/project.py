@@ -25,6 +25,8 @@ CODE_SUFFIXES = {".py", ".sh", ".bash", ".js", ".mjs", ".cjs", ".ts", ".tsx",
 
 MAKE_TARGET = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._/-]*)\s*:(?!=)")
 MAKE_INCLUDE = re.compile(r"^(?:-|s)?include\s+(.+)$")
+GO_MODULE = re.compile(r"^module\s+(\S+)", re.MULTILINE)
+GO_COMMAND = re.compile(r"^cmd/([^/]+)/[^/]+\.go$")
 LONG_OPTION = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{1,}")
 ENV_READ = re.compile(
     r"""(?x)
@@ -67,6 +69,8 @@ class Project:
     services: set[str] = field(default_factory=set)
     options: set[str] = field(default_factory=set)
     env_names: set[str] = field(default_factory=set)
+    #: Binary name -> what builds it, for programs a README runs after a build.
+    built_binaries: dict[str, str] = field(default_factory=dict)
     #: Set when the repository has no Makefile, no package.json and so on, so a
     #: verifier can say "nothing here to check against" instead of "wrong".
     has: dict[str, bool] = field(default_factory=dict)
@@ -200,6 +204,29 @@ def _compose_services(text: str) -> set[str]:
     return services
 
 
+def _go_binaries(project: Project) -> dict[str, str]:
+    """Programs `go build` produces from this repository.
+
+    A README runs ./nebula or ./katana after building it, so the file is
+    rightly absent from the repository. The module's last path element names
+    the binary built from the root (ignoring a /v2-style major version), and
+    each cmd/<name> directory names one more.
+    """
+    if "go.mod" not in project.files:
+        return {}
+    built = {}
+    module = GO_MODULE.search(_read(project.root / "go.mod"))
+    if module:
+        parts = [p for p in module.group(1).split("/") if not re.fullmatch(r"v\d+", p)]
+        if parts:
+            built[parts[-1]] = "go.mod"
+    for path in project.files:
+        command = GO_COMMAND.match(path)
+        if command:
+            built[command.group(1)] = f"cmd/{command.group(1)}"
+    return built
+
+
 def scan(root: Path) -> Project:
     project = Project(root=root)
     paths = _walk(root)
@@ -246,6 +273,7 @@ def scan(root: Path) -> Project:
                     if value:
                         project.env_names.add(value)
 
+    project.built_binaries = _go_binaries(project)
     project.has = {
         "make": bool(project.make_targets) or any(
             n in project.files for n in ("Makefile", "makefile", "GNUmakefile")),

@@ -136,3 +136,8 @@ def test_a_module_close_to_a_package_here_is_still_a_failure(repo):
     result = check(claim(Kind.MODULE, "dmeo"), repo)
     assert result.status is Status.FAILS
     assert result.evidence == "demo"
+
+
+def test_a_script_missing_from_a_go_repository_still_fails(tmp_path):
+    (tmp_path / "go.mod").write_text("module example.com/tool\n")
+    assert check(claim(Kind.SCRIPT, "install.sh"), tmp_path).status is Status.FAILS

@@ -112,3 +112,12 @@ def test_an_absolute_script_path_names_a_file_on_the_readers_machine(repo):
     (repo / "server.py").write_text("print('serving')\n")
     text = "```bash\npython /path/to/hermes-webui/server.py\n```\n"
     assert failures(run(text, repo)) == []
+
+
+def test_a_program_built_from_a_go_module_is_not_a_missing_script(tmp_path):
+    """nebula, katana: the README runs ./nebula, which `go build` produces."""
+    (tmp_path / "go.mod").write_text("module github.com/slackhq/nebula\n\ngo 1.22\n")
+    (tmp_path / "cmd/nebula-cert").mkdir(parents=True)
+    (tmp_path / "cmd/nebula-cert/main.go").write_text("package main\n")
+    text = "```bash\n./nebula -config config.yml\n./nebula-cert ca -name demo\n```\n"
+    assert failures(run(text, tmp_path)) == []

@@ -90,6 +90,10 @@ def _script(claim: Claim, project: Project) -> Result:
     if elsewhere:
         return _fails(claim, f"{spelled} will not run from the repository root; the script "
                              f"is at {elsewhere}", elsewhere)
+    built_from = project.built_binaries.get(target)
+    if built_from:
+        return _undecided(claim, f"{spelled} is the program built from {built_from}, not a "
+                                 f"file kept in the repository")
     return _fails(claim, f"no executable {target} in the repository",
                   _closest(target, project.files))
 
