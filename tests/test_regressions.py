@@ -5,6 +5,8 @@ checker produced on documentation that was correct, which is the failure that
 gets a linter deleted rather than fixed.
 """
 
+import subprocess
+
 from plumbline import document, project
 from plumbline.claims import Kind, Status
 from plumbline.extract import from_document
@@ -121,3 +123,18 @@ def test_a_program_built_from_a_go_module_is_not_a_missing_script(tmp_path):
     (tmp_path / "cmd/nebula-cert/main.go").write_text("package main\n")
     text = "```bash\n./nebula -config config.yml\n./nebula-cert ca -name demo\n```\n"
     assert failures(run(text, tmp_path)) == []
+
+
+def test_a_tracked_directory_named_build_is_part_of_the_repository(tmp_path):
+    """img2threejs: hand-written docs in grimoire/build/ were skipped as build output."""
+    (tmp_path / "grimoire/build").mkdir(parents=True)
+    (tmp_path / "grimoire/build/render_bridge.md").write_text("# bridge\n")
+    (tmp_path / "dist").mkdir()
+    (tmp_path / "dist/bundle.js").write_text("// generated\n")
+    (tmp_path / ".gitignore").write_text("dist/\n")
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "add", "-A"], check=True)
+    scanned = project.scan(tmp_path)
+    assert "grimoire/build/render_bridge.md" in scanned.files
+    assert "dist/bundle.js" not in scanned.files
+    assert failures(run("See [the bridge](grimoire/build/render_bridge.md).\n", tmp_path)) == []
