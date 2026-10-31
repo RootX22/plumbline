@@ -126,3 +126,13 @@ def test_a_link_can_climb_out_of_the_document_directory(repo):
     scanned = project.scan(repo)
     results = verify([claim(Kind.LINK, "../CHANGELOG.md")], scanned, document_dir="docs")
     assert results[0].status is Status.HOLDS
+
+
+def test_a_tool_installed_alongside_is_undecided_rather_than_missing(repo):
+    assert check(claim(Kind.MODULE, "pytest"), repo).status is Status.UNDECIDED
+
+
+def test_a_module_close_to_a_package_here_is_still_a_failure(repo):
+    result = check(claim(Kind.MODULE, "dmeo"), repo)
+    assert result.status is Status.FAILS
+    assert result.evidence == "demo"
