@@ -113,3 +113,16 @@ def test_a_dotfile_path_is_not_mistaken_for_a_missing_one(repo):
     (repo / ".github/ci.yml").write_text("name: ci\n")
     assert check(claim(Kind.PATH, ".github/ci.yml"), repo).status is Status.HOLDS
     assert check(claim(Kind.PATH, "./.github/ci.yml"), repo).status is Status.HOLDS
+
+
+def test_a_leading_slash_in_a_link_means_the_repository_root(repo):
+    scanned = project.scan(repo)
+    results = verify([claim(Kind.LINK, "/docs/setup.md")], scanned, document_dir="docs")
+    assert results[0].status is Status.HOLDS
+
+
+def test_a_link_can_climb_out_of_the_document_directory(repo):
+    (repo / "CHANGELOG.md").write_text("# changes\n")
+    scanned = project.scan(repo)
+    results = verify([claim(Kind.LINK, "../CHANGELOG.md")], scanned, document_dir="docs")
+    assert results[0].status is Status.HOLDS

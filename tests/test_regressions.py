@@ -69,3 +69,16 @@ def test_a_flat_layout_package_is_not_reported_as_missing(tmp_path):
     (tmp_path / "tool/__main__.py").write_text("")
     (tmp_path / "pyproject.toml").write_text('[project]\nname = "tool"\n')
     assert failures(run("```bash\npython3 -m tool\n```\n", tmp_path)) == []
+
+
+def test_a_link_into_a_dot_directory_resolves(repo):
+    """commitlint, radix-ui: [contributing](./.github/CONTRIBUTING.md) was called missing."""
+    (repo / ".github").mkdir()
+    (repo / ".github/CONTRIBUTING.md").write_text("# contributing\n")
+    assert failures(run("See [contributing](./.github/CONTRIBUTING.md).\n", repo)) == []
+
+
+def test_a_percent_encoded_link_resolves_to_the_file_it_names(repo):
+    """ktransformers: a link to a file with spaces in its name is written with %20."""
+    (repo / "docs/Install Guide.md").write_text("# install\n")
+    assert failures(run("Read the [guide](./docs/Install%20Guide.md).\n", repo)) == []
