@@ -99,3 +99,16 @@ def test_modules_that_ship_with_python_are_not_reported_missing(repo):
     text = ("```bash\npython -m pip install -e .\npython -m venv .venv\n"
             "python -m http.server 8000\n```\n")
     assert failures(run(text, repo)) == []
+
+
+def test_toolchain_variables_are_not_claims_about_the_code(repo):
+    """katana: `CGO_ENABLED=0 go build` sets a variable the Go toolchain reads."""
+    text = "```bash\nCGO_ENABLED=0 GOOS=linux go build ./cmd/katana\n```\n"
+    assert failures(run(text, repo)) == []
+
+
+def test_an_absolute_script_path_names_a_file_on_the_readers_machine(repo):
+    """hermes-webui: `python /path/to/hermes-webui/server.py` is a placeholder."""
+    (repo / "server.py").write_text("print('serving')\n")
+    text = "```bash\npython /path/to/hermes-webui/server.py\n```\n"
+    assert failures(run(text, repo)) == []
