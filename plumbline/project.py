@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -84,7 +85,28 @@ class Project:
         return matches[0] if len(matches) == 1 else ""
 
 
+def _git_files(root: Path) -> list[Path] | None:
+    """The files git shows for this checkout, or None when it is not one.
+
+    .gitignore knows what is generated far better than a list of directory
+    names: img2threejs keeps hand-written docs in grimoire/build/, which the
+    name list skips, while an ignored dist/ really is build output.
+    """
+    try:
+        listed = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z", "--cached", "--others",
+             "--exclude-standard"],
+            capture_output=True, check=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    names = listed.stdout.decode("utf-8", "surrogateescape").split("\0")
+    return [root / name for name in names if name and (root / name).is_file()]
+
+
 def _walk(root: Path) -> list[Path]:
+    tracked = _git_files(root)
+    if tracked is not None:
+        return tracked
     collected = []
     for base, directories, names in os.walk(root):
         directories[:] = [d for d in directories if d not in SKIP_DIRS

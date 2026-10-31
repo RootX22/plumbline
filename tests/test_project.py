@@ -81,3 +81,10 @@ def test_a_major_version_suffix_does_not_name_the_binary(tmp_path):
     """ddns-go: the module is github.com/jeessy2/ddns-go/v6, and the binary is ddns-go."""
     (tmp_path / "go.mod").write_text("module github.com/jeessy2/ddns-go/v6\n")
     assert project.scan(tmp_path).built_binaries == {"ddns-go": "go.mod"}
+
+
+def test_outside_git_generated_directories_are_still_skipped(tmp_path):
+    (tmp_path / "build").mkdir()
+    (tmp_path / "build/out.txt").write_text("generated\n")
+    (tmp_path / "README.md").write_text("# demo\n")
+    assert project.scan(tmp_path).files == {"README.md"}
