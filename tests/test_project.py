@@ -75,3 +75,9 @@ def test_includes_that_need_make_to_resolve_are_skipped(tmp_path):
         "include $(d)/Rules.mk\n-include missing.mk\nsinclude local.mk\n\ntest:\n\tpytest\n")
     (tmp_path / "local.mk").write_text("lint:\n\truff check .\n")
     assert project.scan(tmp_path).make_targets == {"test", "lint"}
+
+
+def test_a_major_version_suffix_does_not_name_the_binary(tmp_path):
+    """ddns-go: the module is github.com/jeessy2/ddns-go/v6, and the binary is ddns-go."""
+    (tmp_path / "go.mod").write_text("module github.com/jeessy2/ddns-go/v6\n")
+    assert project.scan(tmp_path).built_binaries == {"ddns-go": "go.mod"}
