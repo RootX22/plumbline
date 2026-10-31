@@ -36,6 +36,12 @@ AMBIENT_ENV = {
     "PYTHONPATH", "PYTHONUNBUFFERED", "VIRTUAL_ENV", "NODE_ENV", "NO_COLOR",
     "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_REGION", "AWS_PROFILE",
     "DOCKER_HOST", "KUBECONFIG", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY",
+    # Read by a build toolchain, not by the code it builds.
+    "CGO_ENABLED", "GOOS", "GOARCH", "GOARM", "GOAMD64", "GOFLAGS", "GOPATH",
+    "GOPROXY", "GOPRIVATE", "GO111MODULE", "GOBIN", "GOCACHE", "RUSTFLAGS",
+    "CARGO_TARGET_DIR", "RUST_BACKTRACE", "CC", "CXX", "CFLAGS", "CXXFLAGS", "LDFLAGS",
+    "NODE_OPTIONS", "DOCKER_BUILDKIT", "COMPOSE_PROJECT_NAME", "COMPOSE_PROFILES",
+    "DEBIAN_FRONTEND",
 }
 
 PATH_LIKE = re.compile(r"^[\w./@-]+$")
@@ -233,7 +239,10 @@ def _from_command(tokens: list[str], line: int, quote: str, project) -> list[Cla
     elif base in {"python", "python3", "py"}:
         if arguments and arguments[0] == "-m" and len(arguments) > 1:
             claim(Kind.MODULE, arguments[1])
-        elif arguments and arguments[0].endswith(".py"):
+        elif (arguments and arguments[0].endswith(".py")
+              and not arguments[0].startswith(("/", "~"))):
+            # An absolute script path, often a /path/to/ placeholder, names a
+            # file on the reader's machine, as it does in prose.
             claim(Kind.PATH, arguments[0])
     elif base in {"pip", "pip3"} or (base in {"python", "python3"} and "pip" in arguments):
         for argument in arguments:
