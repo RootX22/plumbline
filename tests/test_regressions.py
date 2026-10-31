@@ -92,3 +92,10 @@ def test_targets_in_an_included_makefile_count(tmp_path):
         "install: build\n\tcp bin/app /usr/local/bin\n")
     text = "```bash\nmake build\nmake install\n```\n"
     assert failures(run(text, tmp_path)) == []
+
+
+def test_modules_that_ship_with_python_are_not_reported_missing(repo):
+    """ktransformers: `python -m pip install` was reported as a missing package."""
+    text = ("```bash\npython -m pip install -e .\npython -m venv .venv\n"
+            "python -m http.server 8000\n```\n")
+    assert failures(run(text, repo)) == []

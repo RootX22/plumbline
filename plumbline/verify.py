@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import difflib
 import posixpath
+import sys
 from urllib.parse import unquote
 
 from .claims import Claim, Kind, Result, Status
@@ -20,6 +21,11 @@ from .project import Project, relative_path
 def _closest(name: str, pool) -> str:
     matches = difflib.get_close_matches(name, sorted(pool), n=1, cutoff=0.72)
     return matches[0] if matches else ""
+
+
+#: Not in the standard library, but present wherever Python is installed the usual
+#: way, and documentation leans on it for every install command.
+BUNDLED_MODULES = {"pip"}
 
 
 def _holds(claim: Claim, detail: str, evidence: str = "") -> Result:
@@ -110,6 +116,8 @@ def _task(claim: Claim, project: Project) -> Result:
 
 def _module(claim: Claim, project: Project) -> Result:
     name = claim.subject.split(".", 1)[0]
+    if name in sys.stdlib_module_names or name in BUNDLED_MODULES:
+        return _holds(claim, f"{name} ships with Python", name)
     if not project.has.get("python"):
         return _undecided(claim,
                           "no Python package here to check the module against")
@@ -120,8 +128,14 @@ def _module(claim: Claim, project: Project) -> Result:
                 return _holds(claim, f"{package} is runnable with -m", package)
             return _fails(claim, f"{package} has no __main__.py, so python -m {name} will "
                                  f"not start it", package)
-    return _fails(claim, f"no importable package named {name}",
-                  _closest(name, project.python_packages))
+    # A name close to one of this repository's packages is a typo or a rename.
+    # Anything else is a tool installed alongside, such as pytest or uvicorn,
+    # which the repository has no way to vouch for.
+    closest = _closest(name, project.python_packages)
+    if closest:
+        return _fails(claim, f"no importable package named {name}", closest)
+    return _undecided(claim, f"{name} is not a package in this repository; it is "
+                             f"presumably installed separately")
 
 
 def _extra(claim: Claim, project: Project) -> Result:
