@@ -68,3 +68,10 @@ def test_a_leading_dot_slash_is_a_prefix_not_a_character_set():
     assert project.relative_path("./.github/ci.yml") == ".github/ci.yml"
     assert project.relative_path(".github/ci.yml") == ".github/ci.yml"
     assert project.relative_path("././a.md") == "a.md"
+
+
+def test_includes_that_need_make_to_resolve_are_skipped(tmp_path):
+    (tmp_path / "Makefile").write_text(
+        "include $(d)/Rules.mk\n-include missing.mk\nsinclude local.mk\n\ntest:\n\tpytest\n")
+    (tmp_path / "local.mk").write_text("lint:\n\truff check .\n")
+    assert project.scan(tmp_path).make_targets == {"test", "lint"}

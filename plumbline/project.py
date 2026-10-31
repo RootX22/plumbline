@@ -24,6 +24,7 @@ CODE_SUFFIXES = {".py", ".sh", ".bash", ".js", ".mjs", ".cjs", ".ts", ".tsx",
                  ".toml", ".ini", ".cfg", ".env", ".tf", ".conf"}
 
 MAKE_TARGET = re.compile(r"^([A-Za-z0-9][A-Za-z0-9._/-]*)\s*:(?!=)")
+MAKE_INCLUDE = re.compile(r"^(?:-|s)?include\s+(.+)$")
 LONG_OPTION = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]{1,}")
 ENV_READ = re.compile(
     r"""(?x)
@@ -113,6 +114,30 @@ def _make_targets(text: str) -> set[str]:
     return targets
 
 
+def _makefile_targets(path: Path, seen: set[Path]) -> set[str]:
+    """Targets from a makefile and from the files it includes by literal name.
+
+    Larger projects keep their targets in included files (kubo's GNUmakefile is
+    little more than `include Rules.mk`), so reading the top file alone reports
+    real targets as missing. Includes built from variables or globs need make
+    itself to resolve and are left alone.
+    """
+    if path in seen or not path.is_file():
+        return set()
+    seen.add(path)
+    text = _read(path)
+    targets = _make_targets(text)
+    for line in text.splitlines():
+        found = MAKE_INCLUDE.match(line.strip())
+        if not found:
+            continue
+        for name in found.group(1).split():
+            if "$" in name or "*" in name:
+                continue
+            targets |= _makefile_targets(path.parent / name, seen)
+    return targets
+
+
 def _json_scripts(text: str) -> set[str]:
     """Script names from a package.json or composer.json.
 
@@ -184,12 +209,13 @@ def scan(root: Path) -> Project:
         project.files.add(relative)
         project.by_name.setdefault(path.name, []).append(relative)
 
+    included: set[Path] = set()
     for path in paths:
         relative = path.relative_to(root).as_posix()
         name = path.name
 
         if name in {"Makefile", "makefile", "GNUmakefile"}:
-            project.make_targets |= _make_targets(_read(path))
+            project.make_targets |= _makefile_targets(path, included)
         elif name in {"package.json", "composer.json"}:
             project.tasks.setdefault(name, set()).update(_json_scripts(_read(path)))
         elif name == "pyproject.toml":

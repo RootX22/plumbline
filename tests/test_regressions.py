@@ -82,3 +82,13 @@ def test_a_percent_encoded_link_resolves_to_the_file_it_names(repo):
     """ktransformers: a link to a file with spaces in its name is written with %20."""
     (repo / "docs/Install Guide.md").write_text("# install\n")
     assert failures(run("Read the [guide](./docs/Install%20Guide.md).\n", repo)) == []
+
+
+def test_targets_in_an_included_makefile_count(tmp_path):
+    """kubo: the GNUmakefile is `include Rules.mk`, and build and install live there."""
+    (tmp_path / "GNUmakefile").write_text("SHELL=/bin/sh\n\ninclude Rules.mk\n")
+    (tmp_path / "Rules.mk").write_text(
+        "build: bin/app\n\tgo build -o bin/app\n\n"
+        "install: build\n\tcp bin/app /usr/local/bin\n")
+    text = "```bash\nmake build\nmake install\n```\n"
+    assert failures(run(text, tmp_path)) == []
