@@ -10,7 +10,8 @@ saying so costs nothing while guessing costs trust.
 from __future__ import annotations
 
 import difflib
-from pathlib import Path
+import posixpath
+from urllib.parse import unquote
 
 from .claims import Claim, Kind, Result, Status
 from .project import Project, relative_path
@@ -162,14 +163,20 @@ def _env(claim: Claim, project: Project) -> Result:
 
 
 def _link(claim: Claim, project: Project, document_dir: str = "") -> Result:
-    target = claim.subject.strip()
+    # Markdown percent-encodes a space or a non-ASCII name; the file on disk is
+    # spelled plainly, so the link is compared in that spelling.
+    target = unquote(claim.subject.strip())
     if not target:
         return _undecided(claim, "the link has no target")
-    candidates = [target.lstrip("./")]
-    if document_dir:
-        candidates.insert(0, (Path(document_dir) / target).as_posix().lstrip("./"))
+    if target.startswith("/"):
+        # GitHub resolves a leading slash against the repository root.
+        candidates = [target.lstrip("/")]
+    else:
+        candidates = [target]
+        if document_dir:
+            candidates.insert(0, f"{document_dir}/{target}")
     for candidate in candidates:
-        normalised = Path(candidate).as_posix().lstrip("./")
+        normalised = relative_path(posixpath.normpath(candidate))
         if normalised in project.files or (project.root / normalised).is_dir():
             return _holds(claim, "the link target exists", normalised)
     elsewhere = project.nearest(target)
